@@ -1,0 +1,197 @@
+{load href="__static__/js/ztree/js/jquery.ztree.core.js,__static__/js/ztree/js/jquery.ztree.exedit.js,__static__/js/ztree/css/metroStyle/metroStyle.css" /}
+<div class="row-content am-cf">
+    <div class="row">
+        <div class="am-u-sm-12 am-u-md-12 am-u-lg-12">
+            <div class="widget am-cf">
+                <div class="widget-head am-cf">
+                    <div class="widget-title  am-cf"><h1>组织结构管理</h1></div>
+                </div>
+                <div class="widget-body  am-fr">
+                    <div class="zTreeDemoBackground left">
+                        <ul id="orgTree" class="ztree"></ul>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    //初始化树结构，绑定操作
+    var zNodes = {$org};
+    var setting = {
+        view: {
+            addHoverDom: addHoverDom,
+            removeHoverDom: removeHoverDom,
+            selectedMulti: false,
+            showIcon: false
+        },
+        edit: {
+            enable: true,
+            editNameSelectAll: true,
+            showRenameBtn: true,
+            showRemoveBtn: showRemoveBtn
+        },
+        data: {
+            simpleData: {
+                enable: true
+            },
+            keep: {
+                parent: true
+            }
+        },
+        callback: {
+            beforeDrag      : beforeDrag,
+            beforeEditName  : beforeEditName,
+            beforeRemove    : beforeRemove,
+            beforeRename    : beforeRename,
+            beforeClick     : beforeClick,
+            onClick         : onClick,
+            beforeExpand    : beforeExpand
+        }
+    };
+    $(document).ready(function(){
+        $.fn.zTree.init($("#orgTree"), setting, zNodes);
+    });
+
+    function addHoverDom(treeId, treeNode) {
+        addBtn(treeId, treeNode);
+    }
+    // 添加节点
+    function addBtn(treeId, treeNode)
+    {
+        var sObj = $("#" + treeNode.tId + "_span");
+
+        if (treeNode.editNameFlag || $("#addBtn_"+treeNode.tId).length> 0) return;
+
+        var addStr = "<span class='button add' id='addBtn_" + treeNode.tId
+            + "' title='添加部门' onfocus='this.blur();'></span>";
+        sObj.after(addStr);
+
+        var btn = $("#addBtn_"+treeNode.tId);
+        if (btn) btn.bind("click", function(){
+            var zTree = $.fn.zTree.getZTreeObj("orgTree");
+            var newName = prompt("添加新部门","部门");
+            if (newName !== null && newName !== '')
+            {
+                $.post('{:zw_build_url("org/addNode")}',{treeNodeId: treeNode.id, treeNodeName: newName, pos: 'down'},function(result){
+                    if (SUCCESS_CODE === result.status)
+                    {
+                        location.reload();
+                    }
+                    else
+                    {
+                        alert('添加失败');
+                    }
+                });
+            }
+            return false;
+        });
+    }
+    function removeHoverDom(treeId, treeNode) {
+        $("#addBtn_"+treeNode.tId).unbind().remove();
+    }
+    function showRemoveBtn(treeId, treeNode) {
+        return treeNode.level > 0;
+    }
+    function beforeDrag(treeId, treeNodes) {
+        return false;
+    }
+    // 展开节点触发 Mao 20170427
+    function beforeExpand(treeId, treeNode) {
+        var zTree = $.fn.zTree.getZTreeObj("orgTree");
+        var node_id = treeNode.id;
+        if(treeNode.children != undefined){
+            return;
+        }
+        // 先清空子节点
+        zTree.removeChildNodes(treeNode);
+        // 获取子节点
+        $.post('{:zw_build_url("org/getChildNodes")}', {node_id: node_id}, function (data) {
+            if (SUCCESS_CODE === data.status) {
+                var nodes = data.data;
+                // 再加载子节点
+                zTree.addNodes(treeNode,0, nodes,false);
+            }
+        })
+    }
+
+    function beforeEditName(treeId, treeNode) {
+        var zTree = $.fn.zTree.getZTreeObj("orgTree");
+        zTree.selectNode(treeNode);
+        setTimeout(function() {
+            if (confirm("进入节点 -- " + treeNode.name + " 的编辑状态吗？")) {
+                setTimeout(function() {
+                    zTree.editName(treeNode);
+                }, 0);
+            }
+        }, 0);
+        return false;
+    }
+
+    function beforeRemove(treeId, treeNode) {
+        if (confirm("确认删除 节点 -- " + treeNode.name + " 吗？"))
+        {
+            var zTree = $.fn.zTree.getZTreeObj("orgTree");
+            zTree.selectNode(treeNode);
+
+            $.post('{:zw_build_url("org/deleteNode")}',{treeNodeId: treeNode.id},function(result){
+                if (SUCCESS_CODE === result.status)
+                {
+                    location.reload();
+                }
+                else
+                {
+                    alert('删除失败');
+                }
+            });
+            return true;
+        }
+        location.reload();
+    }
+
+    function beforeRename(treeId, treeNode, newName, isCancel) {
+        if (newName.length === 0) {
+            setTimeout(function() {
+                var zTree = $.fn.zTree.getZTreeObj("orgTree");
+                zTree.cancelEditName();
+                alert("节点名称不能为空.");
+            }, 0);
+            return true;
+        }
+
+        $.post('{:zw_build_url("org/editNodeName")}',{treeNodeId: treeNode.id, treeNodeName: newName},function(result){
+            if (SUCCESS_CODE === result.status)
+            {
+                location.reload();
+            }
+            else
+            {
+                alert('重命名失败');
+            }
+        });
+
+        return true;
+    }
+    function beforeClick(treeId, treeNode, clickFlag) {   //click为true时不执行，默认为执行
+        return (treeNode.click !== false);
+    }
+
+    function onClick(event, treeId, treeNode, clickFlag) {
+        $.post('{:zw_build_url("org/getOrg")}',{org_id: treeNode.id},function (data) {
+            if(data.status === SUCCESS_CODE){
+                $('#org_setting').show();
+                $('#party_org_name').val(data.data.party_org_name);
+                $('#party_type').val(data.data.party_type_id);
+                $('#party_org_id').val(data.data.party_org_id);
+                $('#party_org_number').val(data.data.party_org_number);
+            }
+            else
+            {
+                show_notice(data.message)
+            }
+        });
+    }
+</script>

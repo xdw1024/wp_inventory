@@ -1,0 +1,95 @@
+<div class="row-content am-cf">
+    <div class="row">
+
+        <div class="am-u-sm-12 am-u-md-12 am-u-lg-12">
+            <div class="widget am-cf">
+                <div class="widget-head am-cf">
+                    <div class="widget-title  am-cf"><h1>新增菜单</h1></div>
+                </div>
+                <div class="am-u-sm-12 am-u-md-12 am-u-lg-10 am-u-sm-centered">
+                    <form action="{:zw_build_url('menu/save')}" class="am-form" id="doc-vld-msg" method="post">
+                        <fieldset>
+                            <div class="am-form-group">
+                                <label for="parent_id">上级菜单：</label>
+                                <select name="parent_id" id="parent_id">
+                                    <option value="">作为一级菜单</option>
+                                    {volist name="menu_data" id="vo"}
+                                    <option value="{$vo.id}">{$vo.menu_name}</option>
+                                    {/volist}
+                                </select>
+                            </div>
+
+                            <div class="am-form-group">
+                                <label for="menu_name">菜单名称：</label>
+                                <input type="text" name="menu_name" id="menu_name" minlength="3" placeholder="输入菜单名称（至少 3 个字符）" required/>
+                            </div>
+
+                            <div class="am-form-group">
+                                <label for="controller">控制器：</label>
+                                <input type="text" name="controller" id="controller" placeholder="输入控制器" />
+                            </div>
+
+                            <div class="am-form-group">
+                                <label for="method">方法名：</label>
+                                <input type="text" name="method" id="method" placeholder="输入方法名" />
+                            </div>
+
+                            <div class="am-form-group">
+                                <label for="icon">图标：</label>
+                                <input type="text" name="icon" id="icon" placeholder="输入图标">
+                            </div>
+
+                            <div class="am-form-group">
+                                <label>状态： </label>
+                                <input type="radio"  value="0" name="status"> 禁用
+                                <input type="radio"  value="1" name="status" checked> 启用
+                            </div>
+
+                            <div class="am-form-group">
+                                <label>是否可见： </label>
+                                <input type="radio"  value="0" name="view" checked> 不可见
+                                <input type="radio"  value="1" name="view"> 可见
+                            </div>
+
+                            <div class="am-form-group">
+                                <label for="sort">排序：</label>
+                                <input type="number" name="sort" id="sort" placeholder="输入序号">
+                            </div>
+
+                            <p align="center">
+                                <a class="am-btn am-btn-default" href="{:zw_build_url('menu/index')}">返回</a>
+                                <button class="am-btn am-btn-success" type="submit">提交</button>
+                            </p>
+                        </fieldset>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    //表单验证
+    $(function() {
+        $('#doc-vld-msg').validator({
+            //通过验证
+            onValid: function(validity) {
+                $(validity.field).closest('.am-form-group').find('.am-alert').hide();
+            },
+            //未通过验证
+            onInValid: function(validity) {
+                var $field = $(validity.field);
+                var $group = $field.closest('.am-form-group');
+                var $alert = $group.find('.am-alert');
+                // 使用自定义的提示信息 或 插件内置的提示信息
+                var msg = $field.data('validationMessage') || this.getValidationMessage(validity);
+
+                if (!$alert.length) {
+                    $alert = $('<div class="am-alert am-alert-danger"></div>').hide().
+                    appendTo($group);
+                }
+                $alert.html(msg).show();
+            },
+        });
+    });
+</script>

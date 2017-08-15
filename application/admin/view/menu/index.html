@@ -1,0 +1,181 @@
+<div class="row-content am-cf">
+    <div class="row">
+        <div class="am-u-sm-12 am-u-md-12 am-u-lg-12">
+            <div class="widget am-cf">
+                <div class="widget-head am-cf">
+                    <div class="widget-title  am-cf"><h1>菜单列表</h1></div>
+                </div>
+                <div class="widget-body  am-fr">
+
+                    <div class="am-u-sm-12 am-u-md-6 am-u-lg-6">
+                        <div class="am-form-group">
+                            <div class="am-btn-toolbar">
+                                <div class="am-btn-group am-btn-group-xs">
+                                    <a class="am-btn am-btn-default am-btn-success" href="{:zw_build_url('menu/addMenu')}"><span class="am-icon-plus"></span> 新增</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="am-u-sm-12 am-u-md-6 am-u-lg-3">
+                        <div class="am-form-group tpl-table-list-select">
+                        </div>
+                    </div>
+
+                    <div class="am-u-sm-12 am-u-md-12 am-u-lg-3">
+                        <div id="search-group" class="am-input-group am-input-group-sm tpl-form-border-form cl-p">
+                            <input type="text" class="am-form-field search-text">
+                            <span class="am-input-group-btn">
+                                    <button class="am-btn  am-btn-default am-btn-success tpl-table-list-field am-icon-search" type="button"></button>
+                                </span>
+                        </div>
+                    </div>
+
+                    <div class="am-u-sm-12">
+                        <table width="100%" class="am-table am-table-compact am-table-striped tpl-table-black " id="example-r">
+                            <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th>菜单名称</th>
+                                <th>控制器</th>
+                                <th>方法</th>
+                                <th>图标</th>
+                                <th>菜单等级</th>
+                                <th>上级菜单</th>
+                                <th>状态</th>
+                                <th>是否可见</th>
+                                <th>操作</th>
+                            </tr>
+                            </thead>
+                            <tbody id="role-table">
+                            {volist name="menu" id="vo"}
+                            <tr class="gradeX">
+                                <td>{$i}</td>
+                                <td>{$vo.menu_name}</td>
+                                <td>{$vo.controller}</td>
+                                <td>{$vo.method}</td>
+                                <td>{$vo.icon}</td>
+                                <td>{$vo.level}</td>
+                                <td>{$vo.parent_name}</td>
+                                <td>{$vo.status == 1 ? '启用' : '禁用'}</td>
+                                <td>{$vo.view == 1 ? '可见' : '不可见'}</td>
+                                <td>
+                                    <div class="tpl-table-black-operation">
+                                        <a href="{:zw_build_url('menu/editMenu',array('id'=>$vo.id))}">
+                                            <i class="am-icon-pencil"></i> 编辑
+                                        </a>
+                                        <a href="javascript:" onclick="deleteMenu({$vo.id})" class="tpl-table-black-operation-del">
+                                            <i class="am-icon-trash"></i> 删除
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {/volist}
+
+                            <!-- more data -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="am-u-lg-12 am-cf">
+                        <div class="am-fr" id="pagination-page">
+                            {if $menu}{$menu->render()}{/if}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function deleteMenu(id) {
+        var result = confirm('确认要删除?');
+        if(!result){
+            return;
+        }
+        $.post('{:zw_build_url("menu/deleteMenu")}',{id: id},function (data) {
+            if(data.status === SUCCESS_CODE){
+                window.location.reload();
+            }else{
+            }
+        });
+    }
+
+    $(document).ready(function(){
+        $('#search-group span button').click(function(){
+            searchNotice($('#search-group .search-text').val());
+        });
+        $('#search-group .search-text').keydown(function(e){
+            if(e.keyCode === 13){
+                searchNotice($(this).val());
+            }
+        });
+    });
+
+    function searchNotice(search_info) {
+        ajaxResult("{:zw_build_url('menu/searchMenu')}" + "?search_info="+ encodeURI(search_info));
+        return false;
+    }
+
+    /*处理ajax翻页，在翻页类中定义 */
+    function ajaxResult(url) {
+        $.ajax({
+            url: url,
+            type:'get',
+            success: function(data){
+                console.log(data);
+                if(data.status === SUCCESS_CODE){
+                    var html = '';
+                    $.each(data.data.data, function (i, item) {
+                        var status = (1 === item.status) ? '启用' : '禁用';
+                        var view = (1 === item.view) ? '可见' : '不可见';
+                        //判断数据是否为空
+                        if(item.icon == null){
+                            var icon = '';
+                        }
+                        else{
+                            var icon = item.icon;
+                        }
+                        if(item.method == null){
+                            var method = '';
+                        }
+                        else{
+                            var method = item.method;
+                        }
+                        if(item.controller == null){
+                            var controller = '';
+                        }
+                        else{
+                            var controller = item.controller;
+                        }
+                        html += '<tr class="gradeX">' +
+                            '         <td>'+(i+1)+'</td>' +
+                            '         <td>' + item.menu_name + '</td>' +
+                            '         <td>'+item.controller+'</td>' +
+                            '         <td>'+item.method+'</td>' +
+                            '         <td>'+item.icon+'</td>' +
+                            '         <td>'+item.level+'</td>' +
+                            '         <td>'+item.parent_name+'</td>' +
+                            '         <td>'+status+'</td>' +
+                            '         <td>'+view+'</td>' +
+                            '         <td>' +
+                            '           <div class="tpl-table-black-operation">'+
+                            '             <a href="{:zw_build_url(\'menu/editMenu\')}?id='+item.id+'">' +
+                            '               <i class="am-icon-pencil"></i> 编辑</a>'+
+                            '               <a href="javascript:" onclick="deleteMenu(\''+item.id+'\')" class="tpl-table-black-operation-del">'+
+                            '               <i class="am-icon-trash"></i> 删除 </a>'+
+                            '           </div>'+
+                            '         </td>' +
+                            '    </tr>';
+                    });
+                    $('#role-table').empty().append(html);
+                    $('#pagination-page').empty().append(data.data.page);
+                }
+                else{
+                    show_notice(data.message);
+                }
+                return false;
+            }
+        });
+        return false;
+    }
+</script>

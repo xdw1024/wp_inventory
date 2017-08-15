@@ -1,0 +1,136 @@
+<div class="row-content am-cf">
+    <div class="row">
+        <div class="am-u-sm-12 am-u-md-12 am-u-lg-12">
+            <div class="widget am-cf">
+                <div class="widget-head am-cf">
+                    <div class="widget-title  am-cf"><h1>门店列表</h1></div>
+
+
+                </div>
+                <div class="widget-body  am-fr">
+
+                    <div class="am-u-sm-12 am-u-md-6 am-u-lg-6">
+                        <div class="am-form-group">
+                            <div class="am-btn-toolbar">
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="am-u-sm-12 am-u-md-6 am-u-lg-3">
+                        <div class="am-form-group tpl-table-list-select">
+
+                        </div>
+                    </div>
+
+                    <div class="am-u-sm-12 am-u-md-12 am-u-lg-3">
+                        <div id="search-group" class="am-input-group am-input-group-sm tpl-form-border-form cl-p">
+                            <input type="text" class="am-form-field search-text"  placeholder="输入门店名称 | 门店编码">
+                            <span class="am-input-group-btn">
+                                    <button class="am-btn  am-btn-default am-btn-success tpl-table-list-field am-icon-search" type="button"></button>
+                                </span>
+                        </div>
+                    </div>
+
+                    <div class="am-u-sm-12">
+                        <table width="100%" class="am-table am-table-compact am-table-striped tpl-table-black " id="example-r">
+                            <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th>门店名称</th>
+                                <th>门店编码</th>
+                                <th>所属片区</th>
+                                <th>门店类型</th>
+                                <th>操作</th>
+                            </tr>
+                            </thead>
+                            <tbody id="role-table">
+                            {volist name="orgs" id="org"}
+                            <tr class="gradeX">
+                                <td>{$i}</td>
+                                <td>{$org.orgname}</td>
+                                <td>{$org.orgcode}</td>
+                                <td>{if $org.parent_org_name}{$org.parent_org_name}{else/}(未设置){/if}</td>
+                                <td>{if $org.type}{$org.type}{else/}(未设置){/if}</td>
+                                <td>
+                                    <div class="tpl-table-black-operation">
+                                        <a href="{:zw_build_url('Orgmanage/fixParam',array('orgcode'=>$org.orgcode,'page'=>session('page')))}">
+                                            <i class="am-icon-pencil"></i> 修正
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {/volist}
+
+                            <!-- more data -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="am-u-lg-12 am-cf">
+                        <div class="am-fr" id="pagination-page">
+                            {if $orgs}{$orgs->render()}{/if}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+        $(document).ready(function(){
+        $('#search-group span button').click(function(){
+            searchNotice($('#search-group .search-text').val());
+        });
+        $('#search-group .search-text').keydown(function(e){
+            if(e.keyCode === 13){
+                searchNotice($(this).val());
+            }
+        });
+    });
+
+    function searchNotice(search_info) {
+
+        ajaxResult("{:zw_build_url('Orgmanage/searchOrg')}" + "?search_info="+ encodeURI(search_info));
+        return false;
+    }
+
+    /*处理ajax翻页，在翻页类中定义 */
+    function ajaxResult(url) {
+        $.AMUI.progress.start();
+        $.ajax({
+            url: url,
+            type:'get',
+            success: function(data){
+                console.log(data);
+                if(data.status === SUCCESS_CODE){
+                    var html = '';
+                    $.each(data.data.data, function (i, item) {
+                        item.type = item.type?item.type:'(未设置)';
+                        item.parent_org_name = item.parent_org_name?item.parent_org_name:'(未设置)';
+                        html += '<tr class="gradeX">' +
+                            '         <td>'+(i+1)+'</td>' +
+                            '         <td>' + item.orgname + '</td>' +
+                            '         <td>' + item.orgcode +' </td>' +
+                            '         <td>' + item.parent_org_name +' </td>' +
+                            '         <td>'+item.type+'</td>' +
+                            '         <td>' +
+                            '           <div class="tpl-table-black-operation">'+
+                            '             <a href="{:zw_build_url(\'Orgmanage/fixParam\')}?orgcode='+item.orgcode+'&page='+data.data.page_num+'&search_info='+data.data.search_info+'">' +
+                            '               <i class="am-icon-pencil"></i> 修正</a>'+
+                            '           </div>'+
+                            '         </td>' +
+                            '    </tr>';
+                    });
+                    $('#role-table').empty().append(html);
+                    $('#pagination-page').empty().append(data.data.page);
+                    $.AMUI.progress.done();
+                }
+                else{
+                    show_notice(data.message);
+                }
+                return false;
+            }
+        });
+        return false;
+    }
+</script>

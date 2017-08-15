@@ -1,0 +1,144 @@
+<div class="row-content am-cf">
+    <div class="row">
+        <div class="am-u-sm-12 am-u-md-12 am-u-lg-12">
+            <div class="widget am-cf">
+                <div class="widget-head am-cf">
+                    <div class="widget-title  am-cf"><h1>E积分券列表</h1></div>
+                </div>
+                <div class="widget-body  am-fr">
+
+                    <div class="am-u-sm-12 am-u-md-6 am-u-lg-6">
+                        <div class="am-form-group">
+                            <div class="am-btn-toolbar">
+                                <div class="am-btn-group am-btn-group-xs">
+                                    <a class="am-btn am-btn-default am-btn-success" href="{:zw_build_url('eparam/addEparam')}"><span class="am-icon-plus"></span> 新增</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="am-u-sm-12 am-u-md-6 am-u-lg-3">
+                        <div class="am-form-group tpl-table-list-select">
+                        </div>
+                    </div>
+
+                    <div class="am-u-sm-12 am-u-md-12 am-u-lg-3">
+                        <div id="search-group" class="am-input-group am-input-group-sm tpl-form-border-form cl-p">
+                            <input type="text" class="am-form-field search-text" placeholder="商品券名称">
+                            <span class="am-input-group-btn">
+                                    <button class="am-btn  am-btn-default am-btn-success tpl-table-list-field am-icon-search" type="button"></button>
+                                </span>
+                        </div>
+                    </div>
+
+                    <div class="am-u-sm-12">
+                        <table width="100%" class="am-table am-table-compact am-table-striped tpl-table-black " id="example-r">
+                            <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th>商品券名称</th>
+                                <th>面值</th>
+                                <th>操作</th>
+                            </tr>
+                            </thead>
+                            <tbody id="role-table">
+                            {volist name="eparam" id="vo"}
+                            <tr class="gradeX">
+                                <td>{$i}</td>
+                                <td>{$vo.pluname}</td>
+                                <td>{$vo.price}</td>
+                                <td>
+                                    <div class="tpl-table-black-operation">
+                                        <a href="{:zw_build_url('eparam/editEParam',array('id'=>$vo.id))}">
+                                            <i class="am-icon-pencil"></i> 编辑
+                                        </a>
+                                        <a href="javascript:" onclick="deleteEParam({$vo.id})" class="tpl-table-black-operation-del">
+                                            <i class="am-icon-trash"></i> 删除
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {/volist}
+
+                            <!-- more data -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="am-u-lg-12 am-cf">
+                        <div class="am-fr" id="pagination-page">
+                            {if $eparam}{$eparam->render()}{/if}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function deleteEParam(id) {
+        var result = confirm('确认要删除?');
+        if(!result){
+            return;
+        }
+        $.post('{:zw_build_url("eparam/deleteEParam")}',{id: id},function (data) {
+            if(data.status === SUCCESS_CODE){
+                window.location.reload();
+            }else{
+            }
+        });
+    }
+
+    $(document).ready(function(){
+        $('#search-group span button').click(function(){
+            searchNotice($('#search-group .search-text').val());
+        });
+        $('#search-group .search-text').keydown(function(e){
+            if(e.keyCode === 13){
+                searchNotice($(this).val());
+            }
+        });
+    });
+
+    function searchNotice(search_info) {
+        ajaxResult("{:zw_build_url('eparam/searchEParam')}" + "?search_info="+ encodeURI(search_info));
+        return false;
+    }
+
+    /*处理ajax翻页，在翻页类中定义 */
+    function ajaxResult(url) {
+        $.AMUI.progress.start();
+        $.ajax({
+            url: url,
+            type:'get',
+            success: function(data){
+                console.log(data);
+                if(data.status === SUCCESS_CODE){
+                    var html = '';
+                    $.each(data.data.data, function (i, item) {
+                        html += '<tr class="gradeX">' +
+                            '         <td>'+(i+1)+'</td>' +
+                            '         <td>' + item.pluname + '</td>' +
+                            '         <td>'+item.price+'</td>' +
+                            '         <td>' +
+                            '           <div class="tpl-table-black-operation">'+
+                            '             <a href="{:zw_build_url(\'eparam/editEParam\')}?id='+item.id+'">' +
+                            '               <i class="am-icon-pencil"></i> 编辑</a>'+
+                            '               <a href="javascript:" onclick="deleteEParam(\''+item.id+'\')" class="tpl-table-black-operation-del">'+
+                            '               <i class="am-icon-trash"></i> 删除 </a>'+
+                            '           </div>'+
+                            '         </td>' +
+                            '    </tr>';
+                    });
+                    $('#role-table').empty().append(html);
+                    $('#pagination-page').empty().append(data.data.page);
+                    $.AMUI.progress.done();
+                }
+                else{
+                    show_notice(data.message);
+                }
+                return false;
+            }
+        });
+        return false;
+    }
+</script>

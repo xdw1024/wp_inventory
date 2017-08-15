@@ -1,0 +1,167 @@
+{load href="__static__/js/ztree/js/jquery.ztree.core.js,__static__/js/ztree/js/jquery.ztree.exedit.js,__static__/js/ztree/css/metroStyle/metroStyle.css" /}
+<div class="row-content am-cf">
+    <div class="row">
+
+        <div class="am-u-sm-12 am-u-md-12 am-u-lg-12">
+            <div class="widget am-cf">
+                <div class="widget-head am-cf">
+                    <div class="widget-title  am-cf"><h1>编辑用户</h1></div>
+                </div>
+                <div class="am-u-sm-12 am-u-md-12 am-u-lg-10 am-u-sm-centered">
+                    <form action="{:zw_build_url('User/saveUser')}" class="am-form" id="doc-vld-msg" method="post">
+                        <input type="hidden" value="{$user.id}" name="id" />
+                        <fieldset>
+                            <div class="am-form-group">
+                                <label for="doc-vld-user_name-1">姓名</label>
+                                <input type="text" value="{$user.user_name}" name="user_name" id="doc-vld-user_name-1" placeholder="输入姓名" required>
+                            </div>
+
+                            <div class="am-form-group">
+                                <label for="doc-vld-name-2-1">用户名：</label>
+                                <input type="text" value="{$user.account}" name="account" id="doc-vld-name-2-1" placeholder="输入用户名（至少 3 个字符）" required/>
+                            </div>
+                            
+                            <div class="am-form-group">
+                                <label for="doc-vld-pwd-1">密码：</label>
+                                <input type="password" name="password" id="doc-vld-pwd-1" placeholder="请重新设置密码"  required/>
+                            </div>
+
+                            <div class="am-form-group">
+                                <label for="doc-vld-pwd-2">确认密码：</label>
+                                <input type="password" id="doc-vld-pwd-2" placeholder="请与上面输入的密码一致" data-equal-to="#doc-vld-pwd-1" required/>
+                            </div>
+
+                            <div class="am-form-group">
+                                <label for="users_org">所属组织：</label>
+                                <div style="position: relative">
+                                    <input type="text" id="orgSelect" readonly onclick="showMenu();" placeholder="请点击选择组织">
+                                    <input type="hidden" name="users_org" id="users_org">
+                                    <div id="menuContent" class="menuContentd" style="display:none;position: absolute; top: 34px;left: 0px; right:0px;z-index:100;background-color: #fff;border:1px solid #ddd;max-height: 350px;overflow-y: auto">
+                                        <ul id="treeOrg" class="ztree" style="margin-top:0; width:300px;"></ul>
+                                    </div>
+                                </div>
+                                <span class="am-form-caret"></span>
+                            </div>
+
+                            <div class="am-form-group">
+                                <label for="users_role">所属角色：</label>
+                                <select name="users_role" id="users_role">
+                                    {volist name="users_role" id="vo"}
+                                    <option value="{$vo.id}">{$vo.role_name}</option>
+                                    {/volist}
+                                </select>
+                                <span class="am-form-caret"></span>
+                            </div>
+
+                            <div class="am-form-group">
+                                <label for="mobile">手机号：</label>
+                                <input type="number" value="{$user.mobile}" name="mobile" id="mobile" placeholder="输入手机号">
+                            </div>
+
+                            <div class="am-form-group">
+                                <label>性别： </label>
+                                <select name="sex" id="sex">
+                                    <option value="1">男</option>
+                                    <option value="0">女</option>
+                                </select>
+                            </div>
+
+
+                            <div class="am-form-group">
+                                <label>账号状态： </label>
+                                <select name="status" id="status">
+                                    <option value="1">启用</option>
+                                    <option value="0">禁用</option>
+                                </select>
+                            </div>
+
+                            <div class="am-form-group">
+                                <label for="sort">排序：</label>
+                                <input type="number" value="{$user.sort}" name="sort" id="sort" placeholder="输入序号">
+                            </div>
+
+                            <p align="center">
+                                <a class="am-btn am-btn-default" href="{:zw_build_url('User/index')}">返回</a>
+                                <button class="am-btn am-btn-success" type="submit">提交</button>
+                            </p>
+                        </fieldset>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $.fn.zTree.init($("#treeOrg"), setting, zNodes);
+        $('#sex').val('{$user.sex}');
+        $('#status').val('{$user.status}');
+        $('#users_role').val('{$user.users_role}');
+        $('#users_org').val('{$user.users_org}');
+        $('#orgSelect').val('{$user.role_name}');
+    });
+    var zNodes ={$users_org};
+
+    var setting = {
+        view: {
+//            dblClickExpand: false,
+            showIcon: false
+        },
+        data: {
+            simpleData: {
+                enable: true
+            }
+        },
+        callback: {
+            onClick: onClick
+        }
+    };
+
+    function onClick(e, treeId, treeNode) {
+        console.log(treeId, treeNode.id, treeNode.name);
+        $("#orgSelect").val(treeNode.name);
+        $("#users_org").val(treeNode.id);
+        hideMenu();
+    }
+
+    function showMenu() {
+        $("#menuContent").slideDown("fast");
+        $("body").bind("mousedown", onBodyDown);
+    }
+
+    function hideMenu() {
+        $("#menuContent").fadeOut("fast");
+        $("body").unbind("mousedown", onBodyDown);
+    }
+
+    function onBodyDown(event) {
+        if (!(event.target.id === "menuContent" || $(event.target).parents("#menuContent").length>0)) {
+            hideMenu();
+        }
+    }
+
+    //表单验证
+    $(function() {
+        $('#doc-vld-msg').validator({
+            //通过验证
+            onValid: function(validity) {
+                $(validity.field).closest('.am-form-group').find('.am-alert').hide();
+            },
+            //未通过验证
+            onInValid: function(validity) {
+                var $field = $(validity.field);
+                var $group = $field.closest('.am-form-group');
+                var $alert = $group.find('.am-alert');
+                // 使用自定义的提示信息 或 插件内置的提示信息
+                var msg = $field.data('validationMessage') || this.getValidationMessage(validity);
+
+                if (!$alert.length) {
+                    $alert = $('<div class="am-alert am-alert-danger"></div>').hide().
+                    appendTo($group);
+                }
+                $alert.html(msg).show();
+            },
+        });
+    });
+</script>

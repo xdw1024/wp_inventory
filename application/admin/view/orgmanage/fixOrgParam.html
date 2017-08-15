@@ -1,0 +1,135 @@
+{load href="__static__/js/ztree/js/jquery.ztree.core.js,__static__/js/ztree/js/jquery.ztree.exedit.js,__static__/js/ztree/css/metroStyle/metroStyle.css" /}
+<div class="row-content am-cf">
+    <div class="row">
+
+        <div class="am-u-sm-12 am-u-md-12 am-u-lg-12">
+            <div class="widget am-cf">
+                <div class="widget-head am-cf">
+                    <div class="widget-title  am-cf"><h1>门店修正</h1></div>
+                </div>
+                <div class="am-u-sm-12 am-u-md-12 am-u-lg-10 am-u-sm-centered">
+                    <form action="{:zw_build_url('Orgmanage/savefixParam')}" class="am-form" id="doc-vld-msg" method="post">
+                        <input type="hidden" value="{$org.orgcode}" name="orgcode" />
+                        <input type="hidden" value="{$org.org_id}" name="org_id" />
+                        <input type="hidden" value="{$org.parent_org_id}" name="old_parent_org_id" />
+                        <fieldset>
+                            <div class="am-form-group">
+                                <label for="doc-vld-orgname-1">门店名称</label>
+                                <input readonly type="text" value="{$org.orgname}" name="orgname" id="doc-vld-orgname-1" required>
+                            </div>
+
+                            <div class="am-form-group">
+                                <label for="doc-vld-org_code-2-1">门店编码：</label>
+                                <input disabled="disabled" type="text" value="{$org.orgcode}" name="orgcode" id="doc-vld-org_code-2-1"  required/>
+                            </div>
+
+                            <div class="am-form-group">
+                                <label for="parent_org">所属组织：</label>
+                                <div style="position: relative">
+                                    <input type="text" id="orgSelect" readonly onclick="showMenu();" placeholder="请选择所属组织" >
+                                    <input type="hidden" name="parent_org" id="parent_org" >
+                                    <input type="hidden" name="parent_org_name" id="parent_org_name" >
+                                    <div id="menuContent" class="menuContentd" style="display:none;position: absolute; top: 34px;left: 0px; right:0px;z-index:100;background-color: #fff;border:1px solid #ddd;max-height: 350px;overflow-y: auto">
+                                        <ul id="treeOrg" class="ztree" style="margin-top:0; width:300px;"></ul>
+                                    </div>
+                                </div>
+                                <span class="am-form-caret"></span>
+                            </div>
+
+                            <div class="am-form-group">
+                                <label for="org_type">门店类型：</label>
+                                <select name="org_type" id="org_type" required>
+                                    <option value="1">自营店</option>
+                                    <option value="2">承包店</option>
+                                    <option value="3">高速店</option>
+                                    <option value="4">虚拟店</option>
+                                    <option value="5">内部店</option>
+                                    <option value="6">商客门店</option>
+                                </select>
+                                <span class="am-form-caret"></span>
+                            </div>
+                            <p align="center">
+                                <a class="am-btn am-btn-default" href="{:zw_build_url('Orgmanage/index')}">返回</a>
+                                <button class="am-btn am-btn-success" type="submit">提交</button>
+                            </p>
+                        </fieldset>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $.fn.zTree.init($("#treeOrg"), setting, zNodes);
+        $('#org_type').val('{$org.type}');
+        $('#parent_org').val('{$org.parent_org_id}');
+        $('#parent_org_name').val('{$org.parent_org_name}');
+        $('#orgSelect').val('{$org.parent_org_name}');
+    });
+    var zNodes ={$orgTree};
+
+    var setting = {
+        view: {
+//            dblClickExpand: false,
+            showIcon: false
+        },
+        data: {
+            simpleData: {
+                enable: true
+            }
+        },
+        callback: {
+            onClick: onClick
+        }
+    };
+
+    function onClick(e, treeId, treeNode) {
+        console.log(treeId, treeNode.id, treeNode.name);
+        $("#orgSelect").val(treeNode.name);
+        $("#parent_org_name").val(treeNode.name);
+        $("#parent_org").val(treeNode.id);
+        hideMenu();
+    }
+
+    function showMenu() {
+        $("#menuContent").slideDown("fast");
+        $("body").bind("mousedown", onBodyDown);
+    }
+
+    function hideMenu() {
+        $("#menuContent").fadeOut("fast");
+        $("body").unbind("mousedown", onBodyDown);
+    }
+
+    function onBodyDown(event) {
+        if (!(event.target.id === "menuContent" || $(event.target).parents("#menuContent").length>0)) {
+            hideMenu();
+        }
+    }
+
+    //表单验证
+    $(function() {
+        $('#doc-vld-msg').validator({
+            //通过验证
+            onValid: function(validity) {
+                $(validity.field).closest('.am-form-group').find('.am-alert').hide();
+            },
+            //未通过验证
+            onInValid: function(validity) {
+                var $field = $(validity.field);
+                var $group = $field.closest('.am-form-group');
+                var $alert = $group.find('.am-alert');
+                // 使用自定义的提示信息 或 插件内置的提示信息
+                var msg = $field.data('validationMessage') || this.getValidationMessage(validity);
+
+                if (!$alert.length) {
+                    $alert = $('<div class="am-alert am-alert-danger"></div>').hide().
+                    appendTo($group);
+                }
+                $alert.html(msg).show();
+            },
+        });
+    });
+</script>

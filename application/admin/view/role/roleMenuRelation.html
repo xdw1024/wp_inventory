@@ -1,0 +1,89 @@
+<div class="row-content am-cf">
+    <div class="row">
+
+        <div class="am-u-sm-12 am-u-md-12 am-u-lg-12">
+            <div class="widget am-cf am-form">
+                <div class="widget-head am-cf">
+                    <div class="widget-title am-cf"><h1>设定角色<span style="color: black;font-weight:bold;">{$role.role_name}</span>权限</h1></div>
+                </div>
+
+                <div class="widget-body am-cf">
+                    <div class="am-u-sm-6 am-u-md-12 am-u-lg-12">
+                    </div>
+                </div>
+
+                <table class="am-table am-table-striped am-table-hover">
+                    <thead>
+                    <tr>
+                        <th><input id="checkAll" type="checkbox"></th>
+                        <th>菜单名称</th>
+                        <th>菜单层级</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    {volist name="menus" id="vo"}
+                    <tr class="gradeX">
+                        <td><input name="subBox" type="checkbox" value="{$vo.id}"></td>
+                        <td>{$vo.menu_name}</td>
+                        <td>{if condition="$vo.level == '2'"}二级菜单
+                            {else /} 一级菜单
+                            {/if}
+                        </td>
+                    </tr>
+                    {/volist}
+                    </tbody>
+                </table>
+                <p align="center">
+                    <input type="hidden" value="{$role.id}" name="role_id" />
+                    <a class="am-btn am-btn-default" href="{:zw_build_url('role/index')}">返回</a>
+                    <a class="am-btn am-btn-success" type="button" href="javascript:" onclick="saveRelation()">提交</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function() {
+//全选/全不选
+        $("#checkAll").click(function () {
+            $("[name=subBox]:checkbox").prop("checked", this.checked);
+        });
+        $("[name=subBox]:checkbox").click(function () {
+            var flag = true;
+            $("[name=subBox]:checkbox").each(function () {
+                if (!this.checked) {
+                    flag = false;
+                }
+            });
+            $("#checkAll").prop("checked", flag);
+        })
+    });
+
+    function saveRelation(){
+        //jquery获取复选框值
+        var chk_value = new Array();
+        $('input[name="subBox"]:checked').each(function(){
+            chk_value.push($(this).val());
+        });
+//        var chk_value =JSON.stringify(chk_value);
+//        alert(chk_value);
+        var role_id = $('[name="role_id"]').val();
+        $.ajax({
+            url: '{:zw_build_url("role/saveRelation")}',
+            type:'post',
+            data:{role_id: role_id,menu_id:chk_value},
+            success: function(data){
+                console.log(data);
+                if(data.status === SUCCESS_CODE){
+                    location.href = "{:zw_build_url(\'role/index\')}";
+                }
+                else{
+                    show_notice(data.message);
+                }
+            }
+        });
+    }
+    </script>
+

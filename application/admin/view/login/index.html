@@ -1,0 +1,72 @@
+<div class="am-g tpl-g">
+    <!-- 风格切换 -->
+    <div class="tpl-skiner">
+        <div class="tpl-skiner-toggle am-icon-cog">
+        </div>
+        <div class="tpl-skiner-content">
+            <div class="tpl-skiner-content-title">
+                选择主题
+            </div>
+            <div class="tpl-skiner-content-bar">
+                <span class="skiner-color skiner-white" data-color="theme-white"></span>
+                <span class="skiner-color skiner-black" data-color="theme-black"></span>
+            </div>
+        </div>
+    </div>
+    <div class="tpl-login">
+        <div class="tpl-login-content">
+            <div class="tpl-login-logo">
+
+            </div>
+
+
+
+            <form class="am-form tpl-form-line-form" method="post" id="user_login_form">
+                <div class="am-form-group">
+                    <input type="text" class="tpl-form-input" id="account" name="account" placeholder="请输入账号">
+
+                </div>
+
+                <div class="am-form-group">
+                    <input type="password" class="tpl-form-input" id="password" name="password" placeholder="请输入密码">
+                <div class="am-form-group">
+
+                    <!--<button type="button" class="am-btn am-btn-primary  am-btn-block tpl-btn-bg-color-success  tpl-login-btn">提交</button>-->
+                    <a class="am-btn am-btn-primary  am-btn-block tpl-btn-bg-color-success  tpl-login-btn" href="javascript:" onclick="saveOption()">提交</a>
+
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function saveOption() {
+        var options = {
+            url: '{:zw_build_url("login/login")}',
+            type: 'post',
+            dataType :'json',
+            success: function (data) {
+                console.log(data);
+                if(data.status === SUCCESS_CODE){
+                    window.location.href = data.data;
+                }
+                else
+                {
+                    alertControl(data.message, 'fail');
+                }
+            },
+            timeout:6000 　　　　　 　 //设置请求时间，超过该时间后，自动退出请求，单位(毫秒)。　　　
+        };
+        $("#user_login_form").ajaxSubmit(options);
+    }
+
+    //回车提交表单
+    document.onkeydown = function(e){
+        var ev = document.all ? window.event : e;
+        if(ev.keyCode==13) {
+            saveOption();
+        }
+    }
+
+</script>
